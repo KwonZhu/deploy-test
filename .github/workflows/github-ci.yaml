@@ -1,0 +1,46 @@
+#yaml不支持多行注释
+name: CMS CI #CI title
+
+on: #什么场景下会触发CI pipeline
+  #当向master branch做push or pull request时触发
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs: #pipeline能做什么
+  #跑测试前建运行环境，即在一个操作系统上把代码fetch到搭建的虚拟环境里，在这个虚拟环境里执行npm test来跑测试
+  build:
+    #运行环境(操作系统)
+    runs-on: ubuntu-latest
+
+    #如何跑测试(策略矩阵)
+    strategy:
+      matrix:
+        #对参数进行组合
+        node-version: [14.x] #value是array，即可以是多个版本
+        mongodb-version: ['4.0', '4.4']
+
+    #测试步骤
+    steps: #steps是array，'-'表示一个element
+      #取source code
+      - name: Git checkout
+        uses: actions/checkout@v2 #uses：要做的事，action：github actions，checkout@v2：获取github里代码的操作
+      
+      #选取node版本
+      - name: Use Node.js ${{ matrix.node-version }} #变量，从矩阵里取参数
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      
+      #启动MongoDB
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.6.0 #不是actions了
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+      
+      #安装dependencies
+      - run: npm install
+      
+      #跑测试
+      - run: npm test
