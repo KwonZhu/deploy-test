@@ -15,6 +15,9 @@ app.use(cors());
 app.use(helmet());
 
 app.use(express.json());
+app.get('/', (req, res) => {
+  res.send('Welcome to deploy-test');
+});
 app.use('/api', router);
 app.use(errorHandler);
 
