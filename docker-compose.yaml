@@ -1,0 +1,21 @@
+#google: docker-compose template，甚至可以搜docker-compose mongodb template来抄
+#yaml文件一般不需要改动，到网上抄即可
+version: '3' #目前是3.8，但3会更灵活，会根据docker版本来匹配
+services: #即要创建的container：server service和mongo service
+  server:
+    #image: cms #docker build . -t cms时的image的name
+    build: . #动态地打包，即在做docker-compose打包时，在当前目录找到dockerfile，对当前项目打包，
+             #这样就不用担心上一步build的image的name不存在的问题了
+    ports:
+      - 3000:3000
+    container_name: cms_server
+    depends_on: #container启动的优先顺序，不加的话server和mongo可能同时启动
+      - mongo #mongo service先启动。依赖mongo ready后，server才能连接得上
+              #service是什么名字，depends_on的就是什么名字
+    tty: true #当运行docker run --name demo-test -it -p 3000:3000 demo bash时的-it flag的t就是tty，即呈现与server交互的命令行界面
+    env_file: .env #cms_server需要环境变量，而.dockerignore里ignore了.env(即不打包环境变量，即在container里无.env)，所以要传环境变量。在docker-compse启动时，就会给server sercie也就是cms_server这个container使用.env作为环境变量。所以要注意，pull下来的repo，要手动创建.env
+  mongo:
+    image: mongo:4
+    ports: #把端口打开，可以开多个端口映射，是array形式。在yaml用-表示
+      - 27017:27017 #在mongo这个service里，开不开端口都无所谓，开端口是把docker-compose的网络和主机网络映射，意味着做了这一步就能在本机连接上数据库。如果不做，本机连接不上。但是，对于server这个service没有影响，因为docker-compose创建时，会给这2个services创建内部局域网，这2个services之间可以互相通信。只不过要稍注意，通信需要域名，本机是localhost，这2个services在局域网就不是localhost
+    container_name: cms_mongo

@@ -1,0 +1,26 @@
+#step1
+#第1行基本都是写FROM，但不一定都是FROM某一个image，还可以是FROM上一步骤打包好的内容(docker高级用法，把文件分成不同步骤)
+#需要node14的运行环境来运行JS文件
+FROM node:14
+#FROM node:14-alpine 绿色精简版 (这版不支持bash，需要用/bin/sh)
+
+#step2
+#给container设置工作地址/项目地址，一般都是/app，不用担心不存在，会自动创建这个文件夹
+WORKDIR /app
+
+#step3
+#把本地的文件复制到image里
+COPY package.json package.json
+#package.json会被写入到app文件夹下
+COPY package-lock.json package-lock.json
+COPY index.js index.js
+#以上3个单独拎出来写是为了避开node_modules，避免它也写入image里
+
+#step4
+#创建container时，npm i会根据本机操作系统来安装node_modules，所以内容很大概率在linux下不相同。因此不能复制node_modules
+RUN npm i
+
+#dockerfile使用tips：为了让docker在rebuild image时使用缓存=>速度快，把易被改动的代码放下面，把不容易改动的代码(譬如COPY)放前面
+#step5
+#创建(启动)container时，让container自动运行。启动后执行npm start
+ENTRYPOINT [ "npm", "start" ]
