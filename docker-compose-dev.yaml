@@ -17,6 +17,8 @@ services:
              #挂载: 同步container/本地的改动到本地/container。譬如在container里cd app, touch new.txt的话，在本地也会有new.txt
              #又譬如，在本地的new.txt里输入文字，然后在container的app里cat new.txt会看到文字
       - ./:/app #路径，:左边是本机路径，即当前目录，:右边是container路径
+    command: > #添加命令，使得运行docker exec -it cms_server sh后不需要在CLI操作:进入app=>删除本机node_modules=>npm i和npm run dev
+      sh -c "cd /app && rm -rf node_modules/ && npm i && npm run dev" 
   mongo:
     image: mongo:4
     ports: 
