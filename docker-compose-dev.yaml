@@ -1,0 +1,24 @@
+version: '3'
+services:
+  server:
+    #image: cms #docker build . -t cms时的image的name
+    #build: . #因为在dev模式下代码改动后，运行docker compose up --build很浪费时间，所以不直接build
+             #动态地打包，即在做docker-compose打包时，在当前目录找到dockerfile，对当前项目打包，
+             #这样就不用担心上一步build的image的name不存在的问题了
+    image: node:16-alpine #不是用自己build出来的image，而是node原始image
+    ports:
+      - 3000:3000
+    container_name: cms_server
+    depends_on: #container启动的优先顺序，不加的话server和mongo可能同时启动
+      - mongo #mongo service先启动。service是什么名字，depends_on的就是什么名字
+    tty: true #docker run --name demo-test -it -p 3000:3000 demo bash时的-it flag的t就是tty，即呈现与server交互的命令行界面
+    env_file: .env #cms_server需要环境变量
+    volumes: #volumes mount(挂载)，把本地的文件挂载到container里。
+             #挂载: 同步container/本地的改动到本地/container。譬如在container里cd app, touch new.txt的话，在本地也会有new.txt
+             #又譬如，在本地的new.txt里输入文字，然后在container的app里cat new.txt会看到文字
+      - ./:/app #路径，:左边是本机路径，即当前目录，:右边是container路径
+  mongo:
+    image: mongo:4
+    ports: 
+      - 27017:27017 
+    container_name: cms_mongo
